@@ -2,32 +2,34 @@ package com.esmaterzi.moviesystem.models;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Entity
 @Table(name = "watchlists")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class watchlists {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "watchlist_id")
-    private Long watchlistId;
+    private Long id; // maps to `id` in SQL
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private users user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "movie_id", nullable = false)
-    private movies movie;
+    @Column(name = "name", nullable = false, length = 100)
+    private String name;
 
-    @Column(name = "added_at")
-    private LocalDateTime addedAt;
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
-    @Column(name = "watched")
-    private Boolean watched;
+    @OneToMany(mappedBy = "watchlist", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<watchlist_movies> watchlistMovies;
 }

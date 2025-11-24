@@ -2,20 +2,22 @@ package com.esmaterzi.moviesystem.models;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "ratings")
-@Data
+@Table(name = "ratings", uniqueConstraints = {@UniqueConstraint(columnNames = {"user_id","movie_id"})})
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class ratings {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "rating_id")
-    private Long ratingId;
+    private Long id; // maps to `id` in SQL
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -25,12 +27,17 @@ public class ratings {
     @JoinColumn(name = "movie_id", nullable = false)
     private movies movie;
 
-    @Column(name = "rating", nullable = false)
-    private Integer rating;
+    @Column(name = "rating")
+    private Integer rating; // nullable, expected between 1-10 (DB check)
 
-    @Column(name = "review", columnDefinition = "TEXT")
-    private String review;
+    @Column(name = "review_text", columnDefinition = "TEXT")
+    private String reviewText;
 
-    @Column(name = "created_at")
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
 }

@@ -7,18 +7,18 @@ import java.util.Set;
 
 @Entity
 @Table(name = "genres")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class genres {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "genre_id")
-    private Long genreId;
+    private Integer id; // maps to `id` in SQL (INT UNSIGNED)
 
-    @Column(name = "genre_name", nullable = false, unique = true, length = 50)
-    private String genreName;
+    @Column(name = "name", nullable = false, unique = true, length = 50)
+    private String name;
 
     @OneToMany(mappedBy = "genre", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<movie_genres> movieGenres;

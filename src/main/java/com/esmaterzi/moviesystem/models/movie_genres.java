@@ -5,21 +5,22 @@ import lombok.*;
 
 @Entity
 @Table(name = "movie_genres")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class movie_genres {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "movie_genre_id")
-    private Long movieGenreId;
+    @EmbeddedId
+    private MovieGenreId id;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @MapsId("movieId")
     @JoinColumn(name = "movie_id", nullable = false)
     private movies movie;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @MapsId("genreId")
     @JoinColumn(name = "genre_id", nullable = false)
     private genres genre;
 }

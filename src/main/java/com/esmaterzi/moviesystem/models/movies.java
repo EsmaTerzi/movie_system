@@ -2,36 +2,41 @@ package com.esmaterzi.moviesystem.models;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Entity
 @Table(name = "movies")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class movies {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "movie_id")
-    private Long movieId;
+    private Long id; // maps to `id` in SQL
+
+    @Column(name = "external_id", length = 50)
+    private String externalId;
 
     @Column(name = "title", nullable = false, length = 255)
     private String title;
 
-    @Column(name = "release_date")
-    private LocalDate releaseDate;
+    @Column(name = "overview", columnDefinition = "TEXT")
+    private String overview;
 
-    @Column(name = "description", columnDefinition = "TEXT")
-    private String description;
+    @Column(name = "release_year")
+    private Integer releaseYear;
 
-    @Column(name = "director", length = 100)
-    private String director;
+    @Column(name = "poster_url", length = 500)
+    private String posterUrl;
 
-    @Column(name = "duration")
-    private Integer duration;
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<movie_genres> movieGenres;
@@ -40,5 +45,5 @@ public class movies {
     private Set<ratings> ratings;
 
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<watchlists> watchlists;
+    private Set<watchlist_movies> watchlistMovies;
 }
