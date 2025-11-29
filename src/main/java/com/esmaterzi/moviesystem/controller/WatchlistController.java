@@ -16,7 +16,7 @@ import java.util.List;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
-@RequestMapping("/api/watchlists")
+@RequestMapping("/api/watchlist")
 public class WatchlistController {
 
     @Autowired
@@ -71,6 +71,23 @@ public class WatchlistController {
         }
     }
 
+    @DeleteMapping("/{watchlistId}/movies/{movieId}")
+    public ResponseEntity<?> removeMovieFromWatchlist(
+            @PathVariable Long watchlistId,
+            @PathVariable Long movieId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        try {
+            watchlists watchlist = watchlistService.findById(watchlistId)
+                    .filter(wl -> wl.getUser().getId().equals(userDetails.getId()))
+                    .orElseThrow(() -> new RuntimeException("Watchlist not found or access denied"));
+
+            watchlistService.removeMovieFromWatchlist(watchlistId, movieId);
+            return ResponseEntity.ok(new MessageResponse("Movie removed from watchlist successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Error: " + e.getMessage()));
+        }
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteWatchlist(@PathVariable Long id, @AuthenticationPrincipal UserDetailsImpl userDetails) {
         try {
@@ -85,4 +102,3 @@ public class WatchlistController {
         }
     }
 }
-

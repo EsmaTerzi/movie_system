@@ -57,6 +57,32 @@ public class RatingController {
         }
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateRating(
+            @PathVariable Long id,
+            @Valid @RequestBody RatingRequest request,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        try {
+            ratings existingRating = ratingService.findById(id)
+                    .filter(r -> r.getUser().getId().equals(userDetails.getId()))
+                    .orElseThrow(() -> new RuntimeException("Rating not found or access denied"));
+
+            existingRating.setRating(request.getRating());
+            existingRating.setReviewText(request.getReviewText());
+
+            ratings updatedRating = ratingService.createOrUpdateRating(
+                    userDetails.getId(),
+                    existingRating.getMovie().getId(),
+                    request.getRating(),
+                    request.getReviewText()
+            );
+
+            return ResponseEntity.ok(updatedRating);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Error: " + e.getMessage()));
+        }
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteRating(@PathVariable Long id, @AuthenticationPrincipal UserDetailsImpl userDetails) {
         try {

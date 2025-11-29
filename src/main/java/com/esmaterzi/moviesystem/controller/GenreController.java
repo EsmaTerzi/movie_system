@@ -5,6 +5,7 @@ import com.esmaterzi.moviesystem.models.genres;
 import com.esmaterzi.moviesystem.service.GenreService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -36,6 +37,7 @@ public class GenreController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<?> createGenre(@RequestBody genres genre) {
         try {
@@ -46,4 +48,3 @@ public class GenreController {
         }
     }
 }
-

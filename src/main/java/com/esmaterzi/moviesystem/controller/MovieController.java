@@ -6,6 +6,7 @@ import com.esmaterzi.moviesystem.service.MovieService;
 import com.esmaterzi.moviesystem.service.RatingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -39,13 +40,6 @@ public class MovieController {
         return ResponseEntity.ok(movieService.searchByTitle(title));
     }
 
-    @GetMapping("/external/{externalId}")
-    public ResponseEntity<?> getMovieByExternalId(@PathVariable String externalId) {
-        return movieService.findByExternalId(externalId)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
     @GetMapping("/genre/{genreId}")
     public ResponseEntity<List<movies>> getMoviesByGenre(@PathVariable Integer genreId) {
         return ResponseEntity.ok(movieService.findByGenreId(genreId));
@@ -61,6 +55,7 @@ public class MovieController {
         return ResponseEntity.ok(ratingService.getMovieRatingStats(id));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<?> createMovie(@RequestBody movies movie) {
         try {
@@ -71,6 +66,7 @@ public class MovieController {
         }
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<?> updateMovie(@PathVariable Long id, @RequestBody movies movieDetails) {
         return movieService.findById(id)
@@ -85,6 +81,7 @@ public class MovieController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteMovie(@PathVariable Long id) {
         try {
@@ -95,4 +92,3 @@ public class MovieController {
         }
     }
 }
-

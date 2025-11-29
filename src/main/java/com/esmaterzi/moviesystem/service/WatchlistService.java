@@ -59,6 +59,17 @@ public class WatchlistService {
         return watchlistRepository.save(watchlist);
     }
 
+    public void removeMovieFromWatchlist(Long watchlistId, Long movieId) {
+        watchlists watchlist = watchlistRepository.findById(watchlistId)
+                .orElseThrow(() -> new RuntimeException("Watchlist not found"));
+
+        if (watchlist.getWatchlistMovies() != null) {
+            watchlist.getWatchlistMovies().removeIf(wm ->
+                wm.getMovie().getId().equals(movieId));
+            watchlistRepository.save(watchlist);
+        }
+    }
+
     public List<watchlists> getUserWatchlists(Long userId) {
         return watchlistRepository.findByUserId(userId);
     }
@@ -75,4 +86,3 @@ public class WatchlistService {
         return watchlistRepository.findByUserIdAndNameContainingIgnoreCase(userId, name);
     }
 }
-

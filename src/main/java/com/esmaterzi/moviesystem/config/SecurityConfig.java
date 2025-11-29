@@ -58,8 +58,10 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/movies/**").permitAll()
-                .requestMatchers("/api/genres/**").permitAll()
+                .requestMatchers("/api/movies/**").authenticated()
+                .requestMatchers("/api/genres/**").authenticated()
+                .requestMatchers("/api/ratings/**").authenticated()
+                .requestMatchers("/api/watchlists/**").authenticated()
                 .anyRequest().authenticated()
             );
 

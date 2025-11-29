@@ -4,6 +4,7 @@ import com.esmaterzi.moviesystem.dto.JwtResponse;
 import com.esmaterzi.moviesystem.dto.LoginRequest;
 import com.esmaterzi.moviesystem.dto.MessageResponse;
 import com.esmaterzi.moviesystem.dto.SignupRequest;
+import com.esmaterzi.moviesystem.models.Role;
 import com.esmaterzi.moviesystem.models.users;
 import com.esmaterzi.moviesystem.repository.UserRepository;
 import com.esmaterzi.moviesystem.security.JwtUtils;
@@ -70,10 +71,11 @@ public class AuthController {
         user.setUsername(signUpRequest.getUsername());
         user.setEmail(signUpRequest.getEmail());
         user.setPasswordHash(encoder.encode(signUpRequest.getPassword()));
+        user.setRole(Role.ROLE_USER); // Default olarak USER rolü
 
         userRepository.save(user);
 
         return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
     }
-}
 
+}
