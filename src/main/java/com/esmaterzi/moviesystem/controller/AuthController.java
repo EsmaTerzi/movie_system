@@ -19,6 +19,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
+
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/auth")
@@ -47,10 +49,24 @@ public class AuthController {
 
             UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
+            // Null-safe id extraction to avoid static analysis NPE warning
+            Long userId = Optional.ofNullable(userDetails).map(UserDetailsImpl::getId).orElse(null);
+
+            // Kullanıcının rolünü authorities üzerinden al ve "ROLE_" önekini kaldırarak frontend'e daha temiz bir değer ver
+            String role = Optional.ofNullable(userDetails)
+                    .map(UserDetailsImpl::getAuthorities)
+                    .flatMap(auths -> auths.stream().findFirst())
+                    .map(Object::toString)
+                    .orElse("ROLE_USER");
+
+            // ROLE_ prefix'ini kaldır
+            String normalizedRole = role.replaceFirst("^ROLE_", "");
+
             return ResponseEntity.ok(new JwtResponse(jwt,
-                    userDetails.getId(),
-                    userDetails.getUsername(),
-                    userDetails.getEmail()));
+                    userId,
+                    userDetails != null ? userDetails.getUsername() : null,
+                    userDetails != null ? userDetails.getEmail() : null,
+                    normalizedRole));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new MessageResponse("Error: Invalid username or password"));
         }

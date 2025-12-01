@@ -13,11 +13,14 @@ public class JwtResponse {
     private Long id;
     private String username;
     private String email;
+    private String role; // yeni alan: kullanıcı rolü
 
-    public JwtResponse(String token, Long id, String username, String email) {
+    // role ile birlikte kullanılan constructor
+    public JwtResponse(String token, Long id, String username, String email, String role) {
         this.token = token;
         this.id = id;
         this.username = username;
         this.email = email;
+        this.role = role;
     }
 }
