@@ -1,6 +1,7 @@
 package com.esmaterzi.moviesystem.controller;
 
 import com.esmaterzi.moviesystem.dto.MessageResponse;
+import com.esmaterzi.moviesystem.dto.MovieWithRatingDTO;
 import com.esmaterzi.moviesystem.models.movies;
 import com.esmaterzi.moviesystem.service.MovieService;
 import com.esmaterzi.moviesystem.service.RatingService;
@@ -24,13 +25,13 @@ public class MovieController {
     private RatingService ratingService;
 
     @GetMapping
-    public ResponseEntity<List<movies>> getAllMovies() {
-        return ResponseEntity.ok(movieService.findAllMovies());
+    public ResponseEntity<List<MovieWithRatingDTO>> getAllMovies() {
+        return ResponseEntity.ok(movieService.findAllMoviesWithRatings());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getMovieById(@PathVariable Long id) {
-        return movieService.findById(id)
+    public ResponseEntity<MovieWithRatingDTO> getMovieById(@PathVariable Long id) {
+        return movieService.findByIdWithRating(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -38,6 +39,15 @@ public class MovieController {
     @GetMapping("/search")
     public ResponseEntity<List<movies>> searchMovies(@RequestParam String title) {
         return ResponseEntity.ok(movieService.searchByTitle(title));
+    }
+
+    @GetMapping("public/search/advanced")
+    public ResponseEntity<List<MovieWithRatingDTO>> searchMoviesAdvanced(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer genreId,
+            @RequestParam(required = false) Double minRating) {
+        return ResponseEntity.ok(movieService.searchMoviesAdvanced(keyword, year, genreId, minRating));
     }
 
     @GetMapping("/genre/{genreId}")

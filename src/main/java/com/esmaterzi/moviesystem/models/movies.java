@@ -1,5 +1,6 @@
 package com.esmaterzi.moviesystem.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -34,16 +35,25 @@ public class movies {
     @Column(name = "poster_url", length = 500)
     private String posterUrl;
 
+    @Column(name = "director", length = 255)
+    private String director;
+
+    @Column(name = "duration")
+    private Integer duration; // in minutes
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<movie_genres> movieGenres;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<ratings> ratings;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<watchlist_movies> watchlistMovies;
 }

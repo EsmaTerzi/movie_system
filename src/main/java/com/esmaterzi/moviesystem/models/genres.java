@@ -1,5 +1,6 @@
 package com.esmaterzi.moviesystem.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,6 +21,7 @@ public class genres {
     @Column(name = "name", nullable = false, unique = true, length = 50)
     private String name;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "genre", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<movie_genres> movieGenres;
 }

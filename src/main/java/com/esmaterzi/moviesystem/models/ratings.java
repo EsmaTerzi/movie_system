@@ -1,5 +1,6 @@
 package com.esmaterzi.moviesystem.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -19,6 +20,7 @@ public class ratings {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id; // maps to `id` in SQL
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private users user;

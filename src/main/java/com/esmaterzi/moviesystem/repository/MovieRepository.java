@@ -18,5 +18,23 @@ public interface MovieRepository extends JpaRepository<movies, Long> {
     List<movies> findByGenreId(@Param("genreId") Integer genreId);
 
     List<movies> findByReleaseYear(Integer year);
-}
 
+    // Gelişmiş arama query'leri
+    @Query("SELECT DISTINCT m FROM movies m " +
+           "LEFT JOIN m.movieGenres mg " +
+           "LEFT JOIN m.ratings r " +
+           "WHERE (:keyword IS NULL OR LOWER(m.title) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "   OR LOWER(m.overview) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "   OR LOWER(m.director) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+           "AND (:year IS NULL OR m.releaseYear = :year) " +
+           "AND (:genreId IS NULL OR mg.genre.id = :genreId)")
+    List<movies> searchMovies(@Param("keyword") String keyword,
+                              @Param("year") Integer year,
+                              @Param("genreId") Integer genreId);
+
+    @Query("SELECT DISTINCT m FROM movies m " +
+           "LEFT JOIN m.ratings r " +
+           "GROUP BY m.id " +
+           "HAVING AVG(r.rating) >= :minRating")
+    List<movies> findByMinimumRating(@Param("minRating") Double minRating);
+}
