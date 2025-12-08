@@ -1,7 +1,13 @@
 package com.esmaterzi.moviesystem.service;
 
+import com.esmaterzi.moviesystem.dto.MovieRequest;
 import com.esmaterzi.moviesystem.dto.MovieWithRatingDTO;
+import com.esmaterzi.moviesystem.models.MovieGenreId;
+import com.esmaterzi.moviesystem.models.genres;
+import com.esmaterzi.moviesystem.models.movie_genres;
 import com.esmaterzi.moviesystem.models.movies;
+import com.esmaterzi.moviesystem.repository.GenreRepository;
+import com.esmaterzi.moviesystem.repository.MovieGenreRepository;
 import com.esmaterzi.moviesystem.repository.MovieRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -9,8 +15,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -19,6 +27,12 @@ public class MovieService {
 
     @Autowired
     private MovieRepository movieRepository;
+
+    @Autowired
+    private GenreRepository genreRepository;
+
+    @Autowired
+    private MovieGenreRepository movieGenreRepository;
 
     @Lazy
     @Autowired
@@ -35,9 +49,6 @@ public class MovieService {
         return movieRepository.findById(id);
     }
 
-    public Optional<movies> findByExternalId(String externalId) {
-        return movieRepository.findByExternalId(externalId);
-    }
 
     public List<movies> searchByTitle(String title) {
         return movieRepository.findByTitleContainingIgnoreCase(title);
@@ -51,9 +62,6 @@ public class MovieService {
         return movieRepository.findByReleaseYear(year);
     }
 
-    public List<movies> findAllMovies() {
-        return movieRepository.findAll();
-    }
 
     public List<MovieWithRatingDTO> findAllMoviesWithRatings() {
         List<movies> allMovies = movieRepository.findAll();
@@ -72,11 +80,11 @@ public class MovieService {
             dto.setAverageRating((Double) ratingStats.get("averageRating"));
             dto.setTotalRatings((Long) ratingStats.get("totalRatings"));
 
-            // Genre bilgilerini çek
+            // Genre isimlerini çek
             List<String> genreNames = movie.getMovieGenres().stream()
                     .map(mg -> mg.getGenre().getName())
                     .collect(Collectors.toList());
-            dto.setGenres(genreNames);
+            dto.setGenresNames(genreNames);
 
             return dto;
         }).collect(Collectors.toList());
@@ -98,11 +106,11 @@ public class MovieService {
             dto.setAverageRating((Double) ratingStats.get("averageRating"));
             dto.setTotalRatings((Long) ratingStats.get("totalRatings"));
 
-            // Genre bilgilerini çek
+            // Genre isimlerini çek
             List<String> genreNames = movie.getMovieGenres().stream()
                     .map(mg -> mg.getGenre().getName())
                     .collect(Collectors.toList());
-            dto.setGenres(genreNames);
+            dto.setGenresNames(genreNames);
 
             return dto;
         });
@@ -135,10 +143,11 @@ public class MovieService {
                     dto.setAverageRating((Double) ratingStats.get("averageRating"));
                     dto.setTotalRatings((Long) ratingStats.get("totalRatings"));
 
+                    // Genre isimlerini çek
                     List<String> genreNames = movie.getMovieGenres().stream()
                             .map(mg -> mg.getGenre().getName())
                             .collect(Collectors.toList());
-                    dto.setGenres(genreNames);
+                    dto.setGenresNames(genreNames);
 
                     return dto;
                 })
@@ -148,5 +157,94 @@ public class MovieService {
 
     public void deleteMovie(Long id) {
         movieRepository.deleteById(id);
+    }
+
+    public movies createMovieWithGenres(MovieRequest request) {
+        movies movie = new movies();
+        movie.setExternalId(request.getExternalId());
+        movie.setTitle(request.getTitle());
+        movie.setOverview(request.getOverview());
+        movie.setReleaseYear(request.getReleaseYear());
+        movie.setPosterUrl(request.getPosterUrl());
+        movie.setDirector(request.getDirector());
+        movie.setDuration(request.getDuration());
+        movie.setCreatedAt(LocalDateTime.now());
+        movie.setMovieGenres(new HashSet<>()); // Set'i başlat
+
+        // Önce movie'yi kaydet
+        movies savedMovie = movieRepository.save(movie);
+        movieRepository.flush(); // Değişiklikleri hemen uygula
+
+        // Genre'leri ekle
+        if (request.getGenreIds() != null && !request.getGenreIds().isEmpty()) {
+            for (Integer genreId : request.getGenreIds()) {
+                genres genre = genreRepository.findById(genreId)
+                        .orElseThrow(() -> new RuntimeException("Genre not found with id: " + genreId));
+
+                movie_genres movieGenre = new movie_genres();
+                MovieGenreId movieGenreId = new MovieGenreId(savedMovie.getId(), genreId);
+                movieGenre.setId(movieGenreId);
+                movieGenre.setMovie(savedMovie);
+                movieGenre.setGenre(genre);
+
+                // Her ikisini de dene: hem Set'e ekle hem de direkt kaydet
+                savedMovie.getMovieGenres().add(movieGenre);
+                movieGenreRepository.save(movieGenre);
+            }
+            // Son bir kez daha kaydet ve flush yap
+            movieRepository.saveAndFlush(savedMovie);
+        }
+
+        return savedMovie;
+    }
+
+    public movies updateMovieWithGenres(Long movieId, MovieRequest request) {
+        movies movie = movieRepository.findById(movieId)
+                .orElseThrow(() -> new RuntimeException("Movie not found with id: " + movieId));
+
+        // Film bilgilerini güncelle
+        movie.setExternalId(request.getExternalId());
+        movie.setTitle(request.getTitle());
+        movie.setOverview(request.getOverview());
+        movie.setReleaseYear(request.getReleaseYear());
+        movie.setPosterUrl(request.getPosterUrl());
+        movie.setDirector(request.getDirector());
+        movie.setDuration(request.getDuration());
+
+        movies updatedMovie = movieRepository.save(movie);
+        movieRepository.flush();
+
+        // Genre'leri güncelle
+        if (request.getGenreIds() != null && !request.getGenreIds().isEmpty()) {
+            // Eski genre'leri sil
+            movieGenreRepository.deleteByMovieId(movieId);
+            movieGenreRepository.flush();
+
+            // Yeni genre'leri ekle
+            if (updatedMovie.getMovieGenres() == null) {
+                updatedMovie.setMovieGenres(new HashSet<>());
+            } else {
+                updatedMovie.getMovieGenres().clear();
+            }
+
+            for (Integer genreId : request.getGenreIds()) {
+                genres genre = genreRepository.findById(genreId)
+                        .orElseThrow(() -> new RuntimeException("Genre not found with id: " + genreId));
+
+                movie_genres movieGenre = new movie_genres();
+                MovieGenreId movieGenreId = new MovieGenreId(updatedMovie.getId(), genreId);
+                movieGenre.setId(movieGenreId);
+                movieGenre.setMovie(updatedMovie);
+                movieGenre.setGenre(genre);
+
+                // Her ikisini de dene
+                updatedMovie.getMovieGenres().add(movieGenre);
+                movieGenreRepository.save(movieGenre);
+            }
+
+            movieRepository.saveAndFlush(updatedMovie);
+        }
+
+        return updatedMovie;
     }
 }

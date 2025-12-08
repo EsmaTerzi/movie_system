@@ -24,5 +24,5 @@ public class MovieWithRatingDTO {
     private LocalDateTime createdAt;
     private Double averageRating;
     private Long totalRatings;
-    private List<String> genres;
+    private List<String> genresNames;
 }

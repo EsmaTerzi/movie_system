@@ -1,5 +1,6 @@
 package com.esmaterzi.moviesystem.service;
 
+import com.esmaterzi.moviesystem.dto.UserResponse;
 import com.esmaterzi.moviesystem.models.users;
 import com.esmaterzi.moviesystem.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,7 +9,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -44,5 +47,17 @@ public class UserService {
 
     public Optional<users> findById(Long id) {
         return userRepository.findById(id);
+    }
+
+    public List<UserResponse> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(user -> new UserResponse(
+                        user.getId(),
+                        user.getUsername(),
+                        user.getEmail(),
+                        user.getRole(),
+                        user.getCreatedAt()
+                ))
+                .collect(Collectors.toList());
     }
 }

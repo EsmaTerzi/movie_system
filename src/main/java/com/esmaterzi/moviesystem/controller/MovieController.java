@@ -1,6 +1,7 @@
 package com.esmaterzi.moviesystem.controller;
 
 import com.esmaterzi.moviesystem.dto.MessageResponse;
+import com.esmaterzi.moviesystem.dto.MovieRequest;
 import com.esmaterzi.moviesystem.dto.MovieWithRatingDTO;
 import com.esmaterzi.moviesystem.models.movies;
 import com.esmaterzi.moviesystem.service.MovieService;
@@ -24,12 +25,12 @@ public class MovieController {
     @Autowired
     private RatingService ratingService;
 
-    @GetMapping
+    @GetMapping("/public")
     public ResponseEntity<List<MovieWithRatingDTO>> getAllMovies() {
         return ResponseEntity.ok(movieService.findAllMoviesWithRatings());
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/public/{id}")
     public ResponseEntity<MovieWithRatingDTO> getMovieById(@PathVariable Long id) {
         return movieService.findByIdWithRating(id)
                 .map(ResponseEntity::ok)
@@ -67,29 +68,25 @@ public class MovieController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    public ResponseEntity<?> createMovie(@RequestBody movies movie) {
+    public ResponseEntity<?> createMovie(@RequestBody MovieRequest request) {
         try {
-            movies savedMovie = movieService.saveMovie(movie);
+            movies savedMovie = movieService.createMovieWithGenres(request);
             return ResponseEntity.ok(savedMovie);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new MessageResponse("Error: " + e.getMessage()));
         }
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/{id}")
-    public ResponseEntity<?> updateMovie(@PathVariable Long id, @RequestBody movies movieDetails) {
-        return movieService.findById(id)
-                .map(movie -> {
-                    movie.setTitle(movieDetails.getTitle());
-                    movie.setOverview(movieDetails.getOverview());
-                    movie.setReleaseYear(movieDetails.getReleaseYear());
-                    movie.setPosterUrl(movieDetails.getPosterUrl());
-                    movie.setExternalId(movieDetails.getExternalId());
-                    return ResponseEntity.ok(movieService.saveMovie(movie));
-                })
-                .orElse(ResponseEntity.notFound().build());
-    }
+   @PreAuthorize("hasRole('ADMIN')")
+   @PutMapping("/{id}")
+   public ResponseEntity<?> updateMovie(@PathVariable Long id, @RequestBody MovieRequest request) {
+      try {
+           movies updatedMovie = movieService.updateMovieWithGenres(id, request);
+           return ResponseEntity.ok(updatedMovie);
+      } catch (Exception e) {
+          return ResponseEntity.badRequest().body(new MessageResponse("Error: " + e.getMessage()));
+        }
+   }
 
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")

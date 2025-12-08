@@ -1,5 +1,7 @@
 package com.esmaterzi.moviesystem.service;
 
+import com.esmaterzi.moviesystem.dto.AdminRatingResponse;
+import com.esmaterzi.moviesystem.dto.RatingResponse;
 import com.esmaterzi.moviesystem.models.movies;
 import com.esmaterzi.moviesystem.models.ratings;
 import com.esmaterzi.moviesystem.models.users;
@@ -13,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -88,5 +91,49 @@ public class RatingService {
 
     public Optional<ratings> findById(Long id) {
         return ratingRepository.findById(id);
+    }
+
+    private RatingResponse convertToRatingResponse(ratings rating) {
+        RatingResponse response = new RatingResponse();
+        response.setId(rating.getId());
+        response.setUsername(rating.getUser().getUsername());
+        response.setRating(rating.getRating());
+        response.setReviewText(rating.getReviewText());
+        response.setCreatedAt(rating.getCreatedAt());
+        response.setUpdatedAt(rating.getUpdatedAt());
+        return response;
+    }
+
+    public List<RatingResponse> getUserRatingsResponse(Long userId) {
+        return ratingRepository.findByUserId(userId).stream()
+                .map(this::convertToRatingResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<RatingResponse> getMovieRatingsResponse(Long movieId) {
+        return ratingRepository.findByMovieId(movieId).stream()
+                .map(this::convertToRatingResponse)
+                .collect(Collectors.toList());
+    }
+
+    public RatingResponse createOrUpdateRatingResponse(Long userId, Long movieId, Integer ratingValue, String reviewText) {
+        ratings rating = createOrUpdateRating(userId, movieId, ratingValue, reviewText);
+        return convertToRatingResponse(rating);
+    }
+
+    public List<AdminRatingResponse> getAllRatingsForAdmin() {
+        return ratingRepository.findAll().stream()
+                .map(rating -> {
+                    AdminRatingResponse.MovieInfo movieInfo = new AdminRatingResponse.MovieInfo(
+                            rating.getMovie().getTitle()
+                    );
+                    return new AdminRatingResponse(
+                            rating.getId(),
+                            movieInfo,
+                            rating.getRating(),
+                            rating.getReviewText()
+                    );
+                })
+                .collect(Collectors.toList());
     }
 }
