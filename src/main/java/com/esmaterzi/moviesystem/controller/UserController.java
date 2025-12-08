@@ -1,6 +1,8 @@
 package com.esmaterzi.moviesystem.controller;
 
+import com.esmaterzi.moviesystem.dto.UpdateUserRequest;
 import com.esmaterzi.moviesystem.dto.UserResponse;
+import com.esmaterzi.moviesystem.models.users;
 import com.esmaterzi.moviesystem.security.UserDetailsImpl;
 import com.esmaterzi.moviesystem.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,5 +41,30 @@ public class UserController {
                     return ResponseEntity.ok(response);
                 })
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PatchMapping("/profile")
+    public ResponseEntity<UserResponse> updateProfile(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @RequestBody UpdateUserRequest updateRequest) {
+        try {
+            users updatedUser = userService.updateUser(
+                    userDetails.getId(),
+                    updateRequest.getUsername(),
+                    updateRequest.getEmail()
+            );
+
+            UserResponse response = new UserResponse(
+                    updatedUser.getId(),
+                    updatedUser.getUsername(),
+                    updatedUser.getEmail(),
+                    updatedUser.getRole(),
+                    updatedUser.getCreatedAt()
+            );
+
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 }

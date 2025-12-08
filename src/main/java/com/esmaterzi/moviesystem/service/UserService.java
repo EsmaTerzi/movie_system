@@ -60,4 +60,25 @@ public class UserService {
                 ))
                 .collect(Collectors.toList());
     }
+
+    public users updateUser(Long userId, String username, String email) {
+        users user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found!"));
+
+        if (username != null && !username.isEmpty()) {
+            if (!user.getUsername().equals(username) && userRepository.existsByUsername(username)) {
+                throw new RuntimeException("Username is already taken!");
+            }
+            user.setUsername(username);
+        }
+
+        if (email != null && !email.isEmpty()) {
+            if (!user.getEmail().equals(email) && userRepository.existsByEmail(email)) {
+                throw new RuntimeException("Email is already in use!");
+            }
+            user.setEmail(email);
+        }
+
+        return userRepository.save(user);
+    }
 }
