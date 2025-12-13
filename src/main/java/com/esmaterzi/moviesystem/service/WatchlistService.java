@@ -1,7 +1,9 @@
 package com.esmaterzi.moviesystem.service;
 
+import com.esmaterzi.moviesystem.dto.WatchlistMoviesResponse;
 import com.esmaterzi.moviesystem.models.*;
 import com.esmaterzi.moviesystem.repository.WatchlistRepository;
+import com.esmaterzi.moviesystem.repository.WatchlistMovieRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +19,9 @@ public class WatchlistService {
 
     @Autowired
     private WatchlistRepository watchlistRepository;
+
+    @Autowired
+    private WatchlistMovieRepository watchlistMovieRepository;
 
     @Autowired
     private MovieService movieService;
@@ -63,15 +68,15 @@ public class WatchlistService {
         watchlists watchlist = watchlistRepository.findById(watchlistId)
                 .orElseThrow(() -> new RuntimeException("Watchlist not found"));
 
-        if (watchlist.getWatchlistMovies() != null) {
-            watchlist.getWatchlistMovies().removeIf(wm ->
-                wm.getMovie().getId().equals(movieId));
-            watchlistRepository.save(watchlist);
-        }
+        watchlistMovieRepository.deleteByWatchlistIdAndMovieId(watchlistId, movieId);
     }
 
     public List<watchlists> getUserWatchlists(Long userId) {
         return watchlistRepository.findByUserId(userId);
+    }
+
+    public List<watchlists> getAllWatchlists() {
+        return watchlistRepository.findAll();
     }
 
     public Optional<watchlists> findById(Long id) {
@@ -84,5 +89,33 @@ public class WatchlistService {
 
     public List<watchlists> searchUserWatchlists(Long userId, String name) {
         return watchlistRepository.findByUserIdAndNameContainingIgnoreCase(userId, name);
+    }
+
+    public Optional<WatchlistMoviesResponse> getWatchlistWithMovies(Long watchlistId) {
+        return watchlistRepository.findById(watchlistId).map(watchlist -> {
+            WatchlistMoviesResponse response = new WatchlistMoviesResponse();
+            response.setId(watchlist.getId());
+            response.setName(watchlist.getName());
+            response.setCreatedAt(watchlist.getCreatedAt());
+
+            List<WatchlistMoviesResponse.MovieInfo> movieInfos = watchlist.getWatchlistMovies().stream()
+                    .map(wm -> {
+                        movies movie = wm.getMovie();
+                        WatchlistMoviesResponse.MovieInfo info = new WatchlistMoviesResponse.MovieInfo();
+                        info.setId(movie.getId());
+                        info.setTitle(movie.getTitle());
+                        info.setOverview(movie.getOverview());
+                        info.setReleaseYear(movie.getReleaseYear());
+                        info.setPosterUrl(movie.getPosterUrl());
+                        info.setDirector(movie.getDirector());
+                        info.setDuration(movie.getDuration());
+                        info.setAddedAt(wm.getAddedAt());
+                        return info;
+                    })
+                    .toList();
+
+            response.setMovies(movieInfos);
+            return response;
+        });
     }
 }
