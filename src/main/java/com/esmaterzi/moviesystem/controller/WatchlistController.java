@@ -9,6 +9,7 @@ import com.esmaterzi.moviesystem.service.WatchlistService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,10 +28,25 @@ public class WatchlistController {
         return ResponseEntity.ok(watchlistService.getUserWatchlists(userDetails.getId()));
     }
 
+    @GetMapping("/all")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<watchlists>> getAllWatchlists() {
+        return ResponseEntity.ok(watchlistService.getAllWatchlists());
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<?> getWatchlistById(@PathVariable Long id, @AuthenticationPrincipal UserDetailsImpl userDetails) {
         return watchlistService.findById(id)
                 .filter(watchlist -> watchlist.getUser().getId().equals(userDetails.getId()))
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/{id}/movies")
+    public ResponseEntity<?> getWatchlistMovies(@PathVariable Long id, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        return watchlistService.findById(id)
+                .filter(watchlist -> watchlist.getUser().getId().equals(userDetails.getId()))
+                .flatMap(w -> watchlistService.getWatchlistWithMovies(id))
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
