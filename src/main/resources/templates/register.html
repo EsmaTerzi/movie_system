@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -176,31 +176,40 @@
                     name="email"
                     placeholder="ornek@email.com"
                     required
+                    pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                    title="Geçerli bir e-posta adresi giriniz (ör: ornek@email.com)"
                     th:value="${email}">
+                <div id="emailError" class="alert alert-error" style="display:none; margin-top:8px; padding:8px; font-size:0.9rem;"></div>
             </div>
 
             <div class="form-group">
-                <label for="password">Şifre</label>
-                <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    placeholder="••••••••"
-                    required
-                    minlength="6">
-                <p class="password-requirements">En az 6 karakter olmalıdır</p>
-            </div>
+                 <label for="password">Şifre</label>
+                 <input
+                     type="password"
+                     id="password"
+                     name="password"
+                     placeholder="••••••••"
+                     required
+                     minlength="6"
+                     pattern="^\S+$"
+                     title="Şifre boşluk karakteri içeremez">
+                <div id="passwordError" class="alert alert-error" style="display:none; margin-top:8px; padding:8px; font-size:0.9rem;"></div>
+                 <p class="password-requirements">En az 6 karakter olmalıdır</p>
+             </div>
 
-            <div class="form-group">
-                <label for="confirmPassword">Şifre Tekrar</label>
-                <input
-                    type="password"
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    placeholder="••••••••"
-                    required
-                    minlength="6">
-            </div>
+             <div class="form-group">
+                 <label for="confirmPassword">Şifre Tekrar</label>
+                 <input
+                     type="password"
+                     id="confirmPassword"
+                     name="confirmPassword"
+                     placeholder="••••••••"
+                     required
+                     minlength="6"
+                     pattern="^\S+$"
+                     title="Şifre boşluk karakteri içeremez">
+                <div id="confirmPasswordError" class="alert alert-error" style="display:none; margin-top:8px; padding:8px; font-size:0.9rem;"></div>
+             </div>
 
             <button type="submit" class="btn-register">Kayıt Ol</button>
         </form>
@@ -211,14 +220,115 @@
     </div>
 
     <script>
-        // Şifre eşleşme kontrolü
-        document.querySelector('form').addEventListener('submit', function(e) {
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
+        // Şifre eşleşme kontrolü ve e-posta doğrulama
+        const form = document.querySelector('form');
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+        const emailInput = document.getElementById('email');
+        const emailError = document.getElementById('emailError');
+        const passwordError = document.getElementById('passwordError');
+        const confirmPasswordError = document.getElementById('confirmPasswordError');
 
+        function validateEmail(value) {
+            // HTML5 pattern ile uyumlu basit regex
+            const re = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i;
+            return re.test(value);
+        }
+
+        form.addEventListener('submit', function(e) {
+            let hasError = false;
+
+            // Email doğrulama
+            const emailVal = emailInput.value.trim();
+            if (!validateEmail(emailVal)) {
+                hasError = true;
+                emailError.style.display = 'block';
+                emailError.textContent = 'Lütfen geçerli bir e-posta adresi girin (örnek: ornek@email.com).';
+                emailInput.focus();
+            } else {
+                emailError.style.display = 'none';
+                emailError.textContent = '';
+            }
+
+            // Şifre eşleşme ve whitespace kontrolü
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+            // boşluk kontrolü
+            if (/\s/.test(password)) {
+                hasError = true;
+                passwordError.style.display = 'block';
+                passwordError.textContent = 'Şifre boşluk karakteri içeremez.';
+                passwordInput.focus();
+            } else {
+                passwordError.style.display = 'none';
+                passwordError.textContent = '';
+            }
+            if (/\s/.test(confirmPassword)) {
+                hasError = true;
+                confirmPasswordError.style.display = 'block';
+                confirmPasswordError.textContent = 'Şifre (tekrar) boşluk içeremez.';
+                confirmPasswordInput.focus();
+            } else {
+                confirmPasswordError.style.display = 'none';
+                confirmPasswordError.textContent = '';
+            }
             if (password !== confirmPassword) {
+                hasError = true;
+                // alan bazlı hata gösterimi
+                confirmPasswordError.style.display = 'block';
+                confirmPasswordError.textContent = 'Şifreler eşleşmiyor!';
+                confirmPasswordInput.focus();
+            }
+
+            if (hasError) {
                 e.preventDefault();
-                alert('Şifreler eşleşmiyor!');
+            }
+        });
+
+        // Canlı email alanı kontrolü: kullanıcı yazarken mesajı temizle veya göster
+        emailInput.addEventListener('input', function() {
+            if (emailInput.value.trim() === '') {
+                emailError.style.display = 'none';
+                return;
+            }
+            if (!validateEmail(emailInput.value.trim())) {
+                emailError.style.display = 'block';
+                emailError.textContent = 'E-posta formatı geçersiz.';
+            } else {
+                emailError.style.display = 'none';
+                emailError.textContent = '';
+            }
+        });
+
+        // Canlı password alanı kontrolü: boşluk var mı yok mu
+        function checkPasswordLive() {
+            const val = passwordInput.value;
+            if (val === '') {
+                passwordError.style.display = 'none';
+                return;
+            }
+            if (/\s/.test(val)) {
+                passwordError.style.display = 'block';
+                passwordError.textContent = 'Şifre boşluk karakteri içeremez.';
+            } else {
+                passwordError.style.display = 'none';
+                passwordError.textContent = '';
+            }
+        }
+
+        passwordInput.addEventListener('input', checkPasswordLive);
+        confirmPasswordInput.addEventListener('input', function() {
+            const val = confirmPasswordInput.value;
+            if (val === '') {
+                confirmPasswordError.style.display = 'none';
+                return;
+            }
+            if (/\s/.test(val)) {
+                confirmPasswordError.style.display = 'block';
+                confirmPasswordError.textContent = 'Şifre (tekrar) boşluk içeremez.';
+            } else {
+                confirmPasswordError.style.display = 'none';
+                confirmPasswordError.textContent = '';
             }
         });
     </script>

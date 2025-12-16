@@ -63,6 +63,35 @@ public class WatchlistService {
 
         return watchlistRepository.save(watchlist);
     }
+/*
+    @Autowired
+    private WatchlistMovieRepository watchlistMovieRepository;
+
+    public watchlists addMovieToWatchlist(Long watchlistId, Long movieId) {
+        watchlists watchlist = watchlistRepository.findById(watchlistId)
+                .orElseThrow(() -> new RuntimeException("Watchlist not found"));
+
+        movies movie = movieService.findById(movieId)
+                .orElseThrow(() -> new RuntimeException("Movie not found"));
+
+        WatchlistMovieId wmId = new WatchlistMovieId(watchlistId, movieId);
+
+        if (watchlistMovieRepository.existsById(wmId)) {
+            throw new RuntimeException("Movie already in watchlist");
+        }
+
+        watchlist_movies wm = new watchlist_movies();
+        wm.setId(wmId);
+        wm.setWatchlist(watchlist);
+        wm.setMovie(movie);
+        wm.setAddedAt(LocalDateTime.now());
+
+        watchlistMovieRepository.save(wm);   // ✅ INSERT burada
+
+        return watchlist;
+    }*/
+
+
 
     public void removeMovieFromWatchlist(Long watchlistId, Long movieId) {
         watchlists watchlist = watchlistRepository.findById(watchlistId)
