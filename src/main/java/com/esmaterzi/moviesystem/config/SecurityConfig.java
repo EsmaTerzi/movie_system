@@ -2,7 +2,6 @@ package com.esmaterzi.moviesystem.config;
 
 import com.esmaterzi.moviesystem.security.JwtAuthenticationFilter;
 import com.esmaterzi.moviesystem.security.UserDetailsServiceImpl;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -26,9 +25,6 @@ import java.util.List;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
-
-    @Value("${app.frontend.url}")
-    private String frontendUrl;
 
     private final UserDetailsServiceImpl userDetailsService;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -90,7 +86,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(frontendUrl.split(",")));
+        configuration.setAllowedOrigins(List.of("http://localhost:3000", "https://movie-app-two-omega-53.vercel.app"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
