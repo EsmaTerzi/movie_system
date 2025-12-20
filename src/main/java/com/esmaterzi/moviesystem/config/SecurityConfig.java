@@ -28,14 +28,14 @@ public class SecurityConfig {
 
     private final UserDetailsServiceImpl userDetailsService;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final PasswordEncoder passwordEncoder;
 
-    public SecurityConfig(UserDetailsServiceImpl userDetailsService, 
-                         JwtAuthenticationFilter jwtAuthenticationFilter,
-                         PasswordEncoder passwordEncoder) {
+    // 1. PasswordEncoder burada field olarak tanımlanmayacak!
+
+    // 2. Constructor'dan PasswordEncoder parametresini kaldırdım
+    public SecurityConfig(UserDetailsServiceImpl userDetailsService,
+                          JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.userDetailsService = userDetailsService;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-        this.passwordEncoder = passwordEncoder;
     }
 
     @Bean
@@ -43,8 +43,9 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    // 3. PasswordEncoder'ı buraya parametre olarak ekledim
     @Bean
-    public DaoAuthenticationProvider authenticationProvider() {
+    public DaoAuthenticationProvider authenticationProvider(PasswordEncoder passwordEncoder) {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder);
@@ -56,28 +57,29 @@ public class SecurityConfig {
         return authConfig.getAuthenticationManager();
     }
 
+    // 4. AuthenticationProvider'ı buraya parametre olarak ekledim
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, DaoAuthenticationProvider authenticationProvider) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/register").permitAll()
-                .requestMatchers("/login").permitAll()
-                .requestMatchers("/api/genres/public").permitAll()
-                .requestMatchers("/api/movies/public/**").permitAll()
-                .requestMatchers("/api/movies/public/search/advanced").permitAll()
-                .requestMatchers("/api/ratings/public/**").permitAll()
-                .requestMatchers("/api/movies/**").authenticated()
-                .requestMatchers("/api/genres/**").authenticated()
-                .requestMatchers("/api/ratings/**").authenticated()
-                .requestMatchers("/api/watchlists/**").authenticated()
-                .anyRequest().authenticated()
-            );
+                .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/register").permitAll()
+                        .requestMatchers("/login").permitAll()
+                        .requestMatchers("/api/genres/public").permitAll()
+                        .requestMatchers("/api/movies/public/**").permitAll()
+                        .requestMatchers("/api/movies/public/search/advanced").permitAll()
+                        .requestMatchers("/api/ratings/public/**").permitAll()
+                        .requestMatchers("/api/movies/**").authenticated()
+                        .requestMatchers("/api/genres/**").authenticated()
+                        .requestMatchers("/api/ratings/**").authenticated()
+                        .requestMatchers("/api/watchlists/**").authenticated()
+                        .anyRequest().authenticated()
+                );
 
-        http.authenticationProvider(authenticationProvider());
+        http.authenticationProvider(authenticationProvider);
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -86,6 +88,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
+        // Frontend URL'lerini buraya ekledin
         configuration.setAllowedOrigins(List.of("http://localhost:3000", "https://movie-app-two-omega-53.vercel.app"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
